@@ -3,7 +3,11 @@ Erstellt am ...
 
 @author: GRUPPE
 '''     
-            
+
+import socket
+host = "0.0.0.0"
+port = 8080
+         
 def parseMessage(message):
     """
     Parse the received request.
@@ -47,5 +51,19 @@ def readAndReturnJPG():
 
 def main():
    while 1:
-        returnMessage = parseMessage(receivedMessage)
-        connectionSocket.send(returnMessage)
+        pass
+        # Wait for a Request
+        # receivedMessage = connectionSocket.recvfrom(1024)
+        # Parse Request
+        #returnMessage = parseMessage(receivedMessage)
+        # Send Answer Message
+        #connectionSocket.send(returnMessage)
+
+# Create a Socket
+connectionSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# Bind Socket to Port
+connectionSocket.bind((host, port))
+connectionSocket.listen(1)
+connectionSocket.send(returnMessage)
+
+main()
