@@ -50,21 +50,32 @@ def readAndReturnJPG():
 ###############################################################################
 
 def main():
+    print("Server is running!")
+
+
+
+    """while 1:
+        returnMessage = parseMessage(receivedMessage)
+        connectionSocket.send(returnMessage)"""
+
+
+    
     # Create a Socket
     connectionSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Bind Socket to Port
     connectionSocket.bind((host, port))
-    connectionSocket.listen(2)
-    # Accept Connections
-    conn,addr = connectionSocket.accept()
+    connectionSocket.listen(1)
 
-    while 1:
-        # Wait for a Request
-        receivedMessage = connectionSocket.recv(1024)
-        print(receivedMessage)
-        # Parse Request
-        returnMessage = parseMessage(receivedMessage)
-        # Send Answer Message
-        connectionSocket.send(returnMessage)
+    try:
+        while True:
+            conn, addr = connectionSocket.accept()
+            print ("Connection from", addr)
+
+            while True: 
+                data = conn.recv(1024)
+                print (data)
+    finally:
+        pass #connectionSocket.close()
+
 
 main()
