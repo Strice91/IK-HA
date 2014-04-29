@@ -6,8 +6,9 @@ Erstellt am ...
 
 import socket
 import time
-host = "0.0.0.0"
-port = 8080
+
+HOST = "0.0.0.0"
+PORT = 8080 
          
 def parseMessage(message):
     """
@@ -16,18 +17,30 @@ def parseMessage(message):
     Check if file exist.
     Create and return answer with or without file.
     """
-    ret = response400_BAD()
-    return ret
-        
+    request = message.split()
+    ret = []
+    ret_str = ""
+    print(request[1])
+    if request[0] == "GET".encode():
+        ret_str += response200_OK()
+        ret_str += readAndReturnTXT()
+        #ret.append(response200_OK().encode())
+        #ret.append(readAndReturnTXT().encode())
+    else:
+        ret_str = response400_BAD()
+    return ret_str
+
+
 def response404_NotFound():
     """
     Send a 404 Not Found message if the requested file does not exist on the
     server.
     """
+    body = get_body("404 Not Found")
     msg = "HTTP/1.1 404 Not Found\r\n"
-    msg += get_header()
-    msg += body("404 Not Found")
-    return msg.encode("utf_8")
+    msg += get_header(len(body))
+    msg += body
+    return msg.encode()
     
 def response200_OK():
     """
@@ -40,9 +53,10 @@ def response400_BAD():
     """
     Send a 400 Bad Request message if Request could not be parsed properly
     """
+    body = get_body("400 Bad Request")
     msg = "HTTP/1.1 400 Bad Request\r\n"
-    msg += get_header()
-    msg += body("400 Bad Request")
+    msg += get_header(len(body))
+    msg += body
     return msg.encode("utf_8")
 
 def readAndReturnTXT():
@@ -77,25 +91,25 @@ def get_date():
 
     return date
 
-def get_header():
+def get_header(lenght):
     """
     Returns the HTTP Header
     """
     head = ""
-    head += "\r\n"
     head += "Date: %s \r\n" % get_date() 
     head += "Server: PythonServer 0.1\r\n"
     head += "Content-Type: text/html\r\n"
+    head += "Content-Length: %d \r\n" % lenght
     head += "\r\n"
 
     return head
 
-def body(content):
+def get_body(heading):
     body = ""
     body += "<html>"
     body += "<head></head>"
     body += "<body>"
-    body += "<h1>%s</h1>" % content
+    body += "<h1>%s</h1>" % heading
     body += "</body>"
     body += "</html>\r\n"
 
@@ -110,25 +124,39 @@ def body(content):
 
 def main():
     print("Server is running!")
- 
-    # Create a Socket
-    connectionSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Bind Socket to Port
-    connectionSocket.bind((host, port))
-    connectionSocket.listen(1)
 
-    try:
-        while True:
-            conn, addr = connectionSocket.accept()
-            print ("Connection from", addr)
+    s = None
+    for res in socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC,
+                                  socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
+        af, socktype, proto, canonname, sa = res
+        try:
+            s = socket.socket(af, socktype, proto)
+        except socket.error as msg:
+            s = None
+            continue
+        try:
+            s.bind(sa)
+            s.listen(1)
+        except socket.error as msg:
+            s.close()
+            s = None
+            continue
+        break
+    if s is None:
+        print ('could not open socket')
+        sys.exit(1)
+    conn, addr = s.accept()
+    print ('Connected by', addr)
+    while 1:
+        receivedMessage = conn.recv(1024)
+        print("\r\nRES: ",  receivedMessage, "\r\n\r\n")
+        if not receivedMessage: break
+        returnMessage = parseMessage(receivedMessage)
+        print("\r\nRET: ", returnMessage, "\r\n")
 
-            while True: 
-                receivedMessage = conn.recv(1024)
-                print (receivedMessage)
-                returnMessage = parseMessage(receivedMessage)
-                conn.send(returnMessage)
-                
-    finally:
-        connectionSocket.close()
+        for msg in returnMessage:
+            conn.send(msg)
+
+    conn.close()
 
 main()
