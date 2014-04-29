@@ -159,4 +159,7 @@ def main():
 
     conn.close()
 
-main()
+# only if webserver is top class, call the main function. This is important for unittesting
+if __name__ == "__main__":
+    print("Webserver is main process.")
+    main()

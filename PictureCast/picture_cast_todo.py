@@ -77,12 +77,8 @@ def getNrOfPxlPerPkt(udpMaxPayloadSize, imageProperties):
             Returns the number of pixels per packet/datagram.
     """
 
-# <-
-#
-# Put your code for Aufgabe 1 here
-#
-# ->
     return 0  # <- dummy return
+
 
 
 def getReqPktCnt(udpMaxPayloadSize, imageProperties):
