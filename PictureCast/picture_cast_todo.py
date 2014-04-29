@@ -76,8 +76,9 @@ def getNrOfPxlPerPkt(udpMaxPayloadSize, imageProperties):
     Returns:
             Returns the number of pixels per packet/datagram.
     """
-
-    return 0  # <- dummy return
+    pixelBytes = 4 * 4
+    fullPixels = math.floor(udpMaxPayloadSize / pixelBytes)
+    return fullPixels
 
 
 
@@ -97,12 +98,10 @@ def getReqPktCnt(udpMaxPayloadSize, imageProperties):
             Returns the number of packets/datagrams required to send the whole picture.
     """
 
-# <-
-#
-# Put your code for Aufgabe 1 here
-#
-# ->
-    return 0  # <- dummy return
+    Pix = imageProperties["imgHeight"] * imageProperties["imgWidth"]
+    PixPerPkt = getNrOfPxlPerPkt(udpMaxPayloadSize, imageProperties)
+    Pkt = math.ceil(Pix / PixPerPkt)
+    return Pkt
 
 
 def genPayload(pixelData, pxlPerPkt, reqPktCnt, pktNr):
@@ -131,6 +130,26 @@ def genPayload(pixelData, pxlPerPkt, reqPktCnt, pktNr):
     imgHeight = pixelData.shape[0]
     imgNrOfClrCmp = pixelData.shape[2]
 
+    s = struct.Struct('%sf' % len(pixelData[:]))
+
+    startPX = pktNr * pxlPerPkt
+    endPX = startPX + pxlPerPkt
+
+    startLine = math.floor(startPX / imgWidth)
+    startCol = startPX - (imgWidth * startLine)
+    endLine = math.floor(endPX / imgWidth)
+    endCol = endPX - (imgWidth * endLine)
+
+    print("PX = %i" % startPX)
+    print("L  = %i" % startLine)
+    print("C  = %i" % startCol) 
+    fltLst = pixelData[startLine:endLine][startCol:endCol]
+    print (fltLst)
+    print (len(fltLst))
+
+    #print(type(pixelData[0][0]))
+    #print(pixelData)
+    #mylist = s.pack(*pixelData[:])
 # <-
 #
 # Put your Aufgabe 1 code here
