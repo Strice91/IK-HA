@@ -18,17 +18,53 @@ def parseMessage(message):
     Create and return answer with or without file.
     """
     request = message.split()
-    ret = []
-    ret_str = ""
-    print(request[1])
-    if request[0] == "GET".encode():
-        ret_str += response200_OK()
-        ret_str += readAndReturnTXT()
-        #ret.append(response200_OK().encode())
-        #ret.append(readAndReturnTXT().encode())
+    ret = ""
+
+    if request[0] == "GET":
+        # Requested Content
+        reqCont = request[1][1:]
+
+        # Check if there is a File Requested
+        if reqCont.rfind(".") > -1:
+
+            # Extract File Ending
+            reqEnd = reqCont[reqCont.rfind("."):]
+            print ("Recquested Content: ", reqCont)
+            # Check if it is a valid Ending
+            if (reqEnd == ".jpg") or (reqEnd == ".txt"):
+
+                # Check picure of text
+                if reqCont == "LKN.txt":
+                    # Send LKN.txt
+                    content = readAndReturnTXT()
+                    ret = response200_OK()
+                    ret += get_header(len(content), "txt")
+                    ret += content
+
+                elif reqCont == "LKN.jpg":
+                    # Send LKN.jpg
+                    content = readAndReturnJPG()
+                    ret = response200_OK().encode() + get_header(len(content),"img").encode() + content
+                    #ret += get_header(len(content))
+                    #ret += content
+
+                else:
+                    # Send 404_NotFound
+                    ret = response404_NotFound()
+
+            else:
+                # Send 404_NotFound
+                ret = response404_NotFound()
+
+        else:
+            # Send 400_Bad
+            ret = response400_BAD()
+
     else:
-        ret_str = response400_BAD()
-    return ret_str
+        # Send 400_Bad
+        ret = response400_BAD()
+
+    return ret
 
 
 def response404_NotFound():
@@ -38,7 +74,7 @@ def response404_NotFound():
     """
     body = get_body("404 Not Found")
     msg = "HTTP/1.1 404 Not Found\r\n"
-    msg += get_header(len(body))
+    msg += get_header(len(body),"")
     msg += body
     return msg.encode()
     
@@ -55,7 +91,7 @@ def response400_BAD():
     """
     body = get_body("400 Bad Request")
     msg = "HTTP/1.1 400 Bad Request\r\n"
-    msg += get_header(len(body))
+    msg += get_header(len(body),"")
     msg += body
     return msg.encode("utf_8")
 
@@ -88,17 +124,23 @@ def get_date():
     Returns the present Date
     """
     date = time.strftime("%a, %d %b %Y %H:%M:%S")
-
     return date
 
-def get_header(lenght):
+def get_header(lenght,cont):
     """
     Returns the HTTP Header
     """
+    if cont == "img":
+        contType = "image/jpeg"
+    elif cont == "txt":
+        contType = "text/plain"
+    else:
+        contType = "text/html"
+
     head = ""
     head += "Date: %s \r\n" % get_date() 
+    head += "Content-Type: %s\r\n" % contType
     head += "Server: PythonServer 0.1\r\n"
-    head += "Content-Type: text/html\r\n"
     head += "Content-Length: %d \r\n" % lenght
     head += "\r\n"
 
@@ -148,14 +190,18 @@ def main():
     conn, addr = s.accept()
     print ('Connected by', addr)
     while 1:
-        receivedMessage = conn.recv(1024)
-        print("\r\nRES: ",  receivedMessage, "\r\n\r\n")
-        if not receivedMessage: break
-        returnMessage = parseMessage(receivedMessage)
-        print("\r\nRET: ", returnMessage, "\r\n")
+        receivedMessage = conn.recv(1024).decode()
+        print("\r\nRES: ",  receivedMessage, "\r\n")
 
-        for msg in returnMessage:
-            conn.send(msg)
+        if not receivedMessage: break
+
+        returnMessage = parseMessage(receivedMessage)
+        print("\r\nRET: ", returnMessage)
+
+        if type(b'byte') == type(returnMessage):
+            conn.send(returnMessage)
+        else:
+            conn.send(returnMessage.encode())
 
     conn.close()
 

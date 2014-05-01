@@ -29,52 +29,102 @@ def parse_arguments():
 
 
 def connect():
-    # ToDo write some code <-----------
-    pass
+    # New TCP Socket
+    clientSocket = socket(AF_INET, SOCK_STREAM)
+    # Connect Socket to HOST and PORT
+    clientSocket.connect((host, int(port)))
+    ans = clientSocket.recv(1024)
+    return clientSocket
 
 
 def send_user(clientSocket):
     ''' Send USER command and print server response.'''
-    # ToDo write some code <-----------
-    pass
+    command = "user %s\r\n" % user
+    clientSocket.send(command.encode())
+    ans = clientSocket.recv(1024).decode()
+    #print(ans)
+    if("ERR" in ans):
+        print("User not known.")
 
 
 def send_pass(clientSocket):
     ''' Send PASS command and print server response.'''
-   # ToDo write some code <-----------
-    pass
+    command = "pass %s\r\n" % password
+    clientSocket.send(command.encode())
+    ans = clientSocket.recv(1024).decode()
+    #print(ans)
+    if("ERR" in ans):
+        print("Password falsch")
 
 
 def send_list(clientSocket):
     '''Send LIST command and get server response.'''
-   # ToDo write some code <-----------
-    pass
+    command = "LIST\r\n"
+    clientSocket.send(command.encode())
+    ans = clientSocket.recv(1024)
+    return ans.decode().split()
 
 
 def delete_all_mails(clientSocket, list):
     '''delete all emails'''
-    # ToDo write some code <-----------
-    pass
+    delMails = 0
+    for mailNr in list:
+        command = "DELE %s\r\n" % mailNr
+        clientSocket.send(command.encode())
+        ans = clientSocket.recv(1024)
+        if ("OK" in ans.decode()):
+            delMails += 1
+    return delMails
 
 
 def delete_specific_mail(clientSocket, mailNr):
-   # ToDo write some code <-----------
-    pass
+    command = "DELE %s\r\n" % mailNr
+    clientSocket.send(command.encode())
+    ans = clientSocket.recv(1024)
+    if ("OK" in ans.decode()):
+        return True
+    else:
+        return False
 
 
 def close_connection(clientSocket):
     '''Send QUIT command and get server response.'''
-    # ToDo write some code <-----------
-    pass
+    clientSocket.send("QUIT\r\n".encode())
+    ans = clientSocket.recv(1024)
+    clientSocket.close()
 
 
 def main():
+    
+
     if(parse_arguments()):
-        # ToDo write some code <-----------
-        pass
+        # Connection
+        clientSocket = connect()
+        # Authentication
+        send_user(clientSocket)
+        send_pass(clientSocket)
+
+        # Delete specific Mail with mailNr
+        delMails = delete_specific_mail(clientSocket, mailNr)
+        if delMails:
+            print("Mail Nr %s delted!" % mailNr)
+        else:
+            print("Mail could not be delred!")
     else:
-        # ToDo write some code <-----------
-        pass
+        # Connection
+        clientSocket = connect()
+        # Authentication
+        send_user(clientSocket)
+        send_pass(clientSocket)
+
+        # Delete all Mails
+        list = send_list(clientSocket)
+        list = list[3:len(list)-1:2]
+        #print(range(1,len(list)))
+        delMails = delete_all_mails(clientSocket,range(1,len(list)+1))
+        print("%d Mails delted!" % delMails)
+
+    close_connection(clientSocket)
 
 if __name__ == "__main__":
     main()

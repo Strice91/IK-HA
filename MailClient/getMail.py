@@ -42,50 +42,81 @@ def connect(host, port):
             port: the server port (normally 110)
         returns: a socket that is connected to the server
     """
-
-    # ToDo write some code <--
-
+    # New TCP Socket
+    clientSocket = socket(AF_INET, SOCK_STREAM)
+    # Connect Socket to HOST and PORT
+    clientSocket.connect((host, int(port)))
+    return clientSocket
 
 def send_user(clientSocket, user):
     """ send the user command """
-
-    # ToDo write some code <--
+    command = "user %s\r\n" % user
+    clientSocket.send(command.encode())
+    ans = clientSocket.recv(1024)
+    #print(ans)
+    if("ERR" in ans):
+        print("User not known.")
 
 
 def send_pass(clientSocket, password):
     """ send the pass command """
-
-    # ToDo write some code <--
+    command = "pass %s\r\n" % password
+    clientSocket.send(command.encode())
+    ans = clientSocket.recv(1024) 
+    #print(ans)
+    if("ERR" in ans):
+        print("Password falsch")
 
 
 def close_connection(clientSocket):
     """ close the connection """
-
-    # ToDo write some code <--
+    command = "QUIT\r\n"
+    clientSocket.send(command.encode())
+    ans = clientSocket.recv(1024)
+    clientSocket.close()
 
 
 def send_rset(clientSocket):
     """ send rset command """
-
-    # ToDo write some code <--
+    command = "RSET\r\n"
+    clientSocket.sendall(command.encode())
+    ans = clientSocket.recv(1024)
 
 
 def send_list(clientSocket):
     """ send list command """
-
-    # ToDo write some code <--
+    command = "LIST\r\n"
+    clientSocket.send(command.encode())
+    ans = clientSocket.recv(1024)
+    return ans
 
 
 def retr_mail(clientSocket, emailnum, user):
     """ retrieve mail """
+    # Get mailList
+    mailList = send_list(clientSocket)
+    # Decode Bytes
+    mailList = mailList.decode()
+    # Split List in Array
+    mailList = mailList.split()
+    if len(mailList) > 0:
+        # Only store Mail Lengths
+        mailList = mailList[4:len(mailList)-1:2]
+        # Select Mail Length
+        mailLenght = mailList[emailnum-1]
 
-    # ToDo write some code <--
+    clientSocket.send(("RETR %d\r\n" % emailnum).encode())
+    ans = clientSocket.recv(1024)
 
 
 def retr_header(clientSocket, a, list):
     """ retrieve header """
+    for mailNr in list:
+        command = "TOP %d\r\n" % mailNr
+        clientSocket.send(command.encode())
+        ans = clientSocket.recv(1024)
 
-    # ToDo write some code <--
+        
 
 
 def getSpecificMail(argv):
@@ -97,7 +128,11 @@ def getSpecificMail(argv):
     password = argv[4]
     emailnum = argv[5]
 
-        # ToDo write some code <--
+    clientSocket = connect(host, port)
+    send_user(clientSocket, user)
+    send_pass(clientSocket, password)
+
+    retr_mail(clientSocket, emailnum, user)
 
     return 0
 
