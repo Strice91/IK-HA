@@ -29,7 +29,8 @@ def parseMessage(message):
 
             # Extract File Ending
             reqEnd = reqCont[reqCont.rfind("."):]
-            print ("Recquested Content: ", reqCont)
+            #print ("Recquested Content: ", reqCont)
+
             # Check if it is a valid Ending
             if (reqEnd == ".jpg") or (reqEnd == ".txt"):
 
@@ -130,6 +131,7 @@ def get_header(lenght,cont):
     """
     Returns the HTTP Header
     """
+    # Select the right Contenttype
     if cont == "img":
         contType = "image/jpeg"
     elif cont == "txt":
@@ -137,6 +139,7 @@ def get_header(lenght,cont):
     else:
         contType = "text/html"
 
+    # Build Header Lines
     head = ""
     head += "Date: %s \r\n" % get_date() 
     head += "Content-Type: %s\r\n" % contType
@@ -165,18 +168,20 @@ def get_body(heading):
 ###############################################################################
 
 def main():
-    print("Server is running!")
-
+    showMessages = False
     s = None
     for res in socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC,
                                   socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
         af, socktype, proto, canonname, sa = res
+
+        # Create Socket
         try:
             s = socket.socket(af, socktype, proto)
         except socket.error as msg:
             s = None
             continue
         try:
+            # Connect
             s.bind(sa)
             s.listen(1)
         except socket.error as msg:
@@ -184,25 +189,40 @@ def main():
             s = None
             continue
         break
+
+    # Check if Socket was created and connected
     if s is None:
         print ('could not open socket')
         sys.exit(1)
+
+    # Accept new Connections
     conn, addr = s.accept()
     print ('Connected by', addr)
-    while 1:
-        receivedMessage = conn.recv(1024).decode()
-        print("\r\nRES: ",  receivedMessage, "\r\n")
 
+    # Wait for Messages and process them
+    while 1:
+        # Recieve Requests
+        receivedMessage = conn.recv(1024).decode()
+        # Print revieced Message
+        if showMessages: print("RES: ",  receivedMessage, "\r\n")
+        # If Message is empty quit connection
         if not receivedMessage: break
 
+        # Parse Message and create Answer
         returnMessage = parseMessage(receivedMessage)
-        print("\r\nRET: ", returnMessage)
+        # Print created Answer
+        if showMessages: print("RET: ", returnMessage, "\r\n")
+        print("Message Received!")
 
+        # Check if Message is already encoded
         if type(b'byte') == type(returnMessage):
             conn.send(returnMessage)
         else:
             conn.send(returnMessage.encode())
 
+        print("Message Sent!")
+
+    # Close Connection
     conn.close()
 
 # only if webserver is top class, call the main function. This is important for unittesting
