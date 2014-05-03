@@ -137,15 +137,13 @@ def genPayload(pixelData, pxlPerPkt, reqPktCnt, pktNr):
 
     startLine = math.floor(startPX / imgWidth)
     startCol = startPX - (imgWidth * startLine)
-    endLine = math.floor(endPX / imgWidth)
-    endCol = endPX - (imgWidth * endLine)
 
     print("PX = %i" % startPX)
     print("L  = %i" % startLine)
     print("C  = %i" % startCol) 
-    fltLst = pixelData[startLine:endLine][startCol:endCol]
-    print (fltLst)
-    print (len(fltLst))
+    #fltLst = pixelData[startLine:endLine][startCol:endCol]
+    #print (fltLst)
+    #print (len(fltLst))
 
     #print(type(pixelData[0][0]))
     #print(pixelData)
