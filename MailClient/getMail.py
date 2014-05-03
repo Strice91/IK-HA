@@ -46,26 +46,29 @@ def connect(host, port):
     clientSocket = socket(AF_INET, SOCK_STREAM)
     # Connect Socket to HOST and PORT
     clientSocket.connect((host, int(port)))
+    ans = clientSocket.recv(1024)
     return clientSocket
 
 def send_user(clientSocket, user):
     """ send the user command """
     command = "user %s\r\n" % user
     clientSocket.send(command.encode())
-    ans = clientSocket.recv(1024)
+    ans = clientSocket.recv(1024).decode()
     #print(ans)
     if("ERR" in ans):
         print("User not known.")
+        sys.exit()
 
 
 def send_pass(clientSocket, password):
     """ send the pass command """
     command = "pass %s\r\n" % password
     clientSocket.send(command.encode())
-    ans = clientSocket.recv(1024) 
+    ans = clientSocket.recv(1024).decode() 
     #print(ans)
     if("ERR" in ans):
         print("Password falsch")
+        sys.exit()
 
 
 def close_connection(clientSocket):
@@ -87,36 +90,59 @@ def send_list(clientSocket):
     """ send list command """
     command = "LIST\r\n"
     clientSocket.send(command.encode())
-    ans = clientSocket.recv(1024)
+    ans = clientSocket.recv(1024).decode().split()
     return ans
 
 
 def retr_mail(clientSocket, emailnum, user):
     """ retrieve mail """
-    # Get mailList
-    mailList = send_list(clientSocket)
-    # Decode Bytes
-    mailList = mailList.decode()
-    # Split List in Array
-    mailList = mailList.split()
-    if len(mailList) > 0:
-        # Only store Mail Lengths
-        mailList = mailList[4:len(mailList)-1:2]
-        # Select Mail Length
-        mailLenght = mailList[emailnum-1]
+    # Request Mail from Server
+    clientSocket.send(("RETR %d\r\n" % int(emailnum)).encode())
+    ans = clientSocket.recv(1024).decode()
+    if not ("ERR" in ans):
+        IND_From = ans.index("From:")
+        IND_To = ans.index("To:")
+        IND_Subject = ans.index("Subject:")
+        IND_X_EsetID = ans.index("X-EsetId:")
 
-    clientSocket.send(("RETR %d\r\n" % emailnum).encode())
-    ans = clientSocket.recv(1024)
+        ret = {}
+        ret["mailfrom"] = ans[IND_From+6:IND_To-1]
+        ret["mailto"] = ans[IND_To+4:IND_Subject-1]
+        ret["subjekt"] = ans[IND_Subject+9:IND_X_EsetID-1]
+        ret["date"] = ""
+        ret["text"] = ans[IND_X_EsetID+36:len(ans)-3]
+
+        #print(ret["mailfrom"])
+        #print(ret["mailto"])
+        #print(ret["subjekt"])
+        #print(ret["text"])
+
+        return ret
+
+    else:
+        return False
+
+    
+
 
 
 def retr_header(clientSocket, a, list):
     """ retrieve header """
-    for mailNr in list:
-        command = "TOP %d\r\n" % mailNr
-        clientSocket.send(command.encode())
-        ans = clientSocket.recv(1024)
+    mailNr = list[a]
+    command = "TOP %d\r\n" % int(mailNr)
+    clientSocket.send(command.encode())
+    ans = clientSocket.recv(1024).decode().split()
+    #print(ans)
+    ret = {}
+    ret["mailnum"] = int(mailNr)
+    ret["mailfrom"] = ans[2] + " " + ans[3]
+    SubjIndex = ans.index("Subject:")
+    ret["subjekt"] = ' '.join(ans[SubjIndex+1:len(ans)-1])
 
-        
+    return ret
+
+
+
 
 
 def getSpecificMail(argv):
@@ -132,7 +158,14 @@ def getSpecificMail(argv):
     send_user(clientSocket, user)
     send_pass(clientSocket, password)
 
-    retr_mail(clientSocket, emailnum, user)
+    mail = retr_mail(clientSocket, emailnum, user)
+
+    printStart(user)
+    if mail:
+        printMail(mail["mailfrom"], mail["mailto"], mail["subjekt"], mail["date"], mail["text"])
+    else:
+        printError()
+    printEnd()
 
     return 0
 
@@ -145,7 +178,25 @@ def getAllMails(argv):
     user = argv[3]
     password = argv[4]
 
-        # ToDo write some code <--
+    clientSocket = connect(host, port)
+    send_user(clientSocket, user)
+    send_pass(clientSocket, password)
+
+    mailList = send_list(clientSocket)
+    mailList = mailList[3:len(mailList)-1:2]
+    
+    printStart(user)
+
+    if not mailList:
+        printError()
+    else:
+        a = 0
+        for mail in mailList:
+            head = retr_header(clientSocket,a,mailList)
+            printMailHeader(head["mailnum"],head["mailfrom"],head["subjekt"])
+            a += 1
+
+    printEnd()
 
     return 0
 

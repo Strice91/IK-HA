@@ -109,7 +109,7 @@ def main():
         if delMails:
             print("Mail Nr %s delted!" % mailNr)
         else:
-            print("Mail could not be delred!")
+            print("Mail could not be deleted!")
     else:
         # Connection
         clientSocket = connect()
