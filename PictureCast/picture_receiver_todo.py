@@ -15,11 +15,13 @@
 # Load required libraries
 import struct
 import math
+import numpy as np
 
 # =============
 # Load Settings
 # =============
 
+ListOfPkt = []
 
 """
 The variable AUFGABE sets which functions to use for
@@ -34,8 +36,8 @@ AUFGABE > 1
 NOTE: The value has to be the same for the sender and receiver!
     
 """
-AUFGABE=1
-#AUFGABE=3
+#AUFGABE=1
+AUFGABE=3
 
 
 """
@@ -147,6 +149,38 @@ def onRcvPkt(imageProperties,
     # may get a high CPU usage and more lost packets.
     # ->
 
+    imgHeight = imageProperties["imgHeight"]
+    imgWidth = imageProperties["imgWidth"]
+    pxlPerPkt = senderProperties['pxlPerPkt']
+    pktNr = pktStats['pktCntRcvd']
+
+    startPX = pktNr * pxlPerPkt
+    startLine = math.floor(startPX / imgWidth)
+    startCol = startPX - (imgWidth * startLine)
+
+    #print("PTK = %i" % pktNr)
+    #print("PX = %i" % startPX)
+    #print("L  = %i" % startLine)
+    #print("C  = %i" % startCol) 
+
+    line = startLine
+    col = startCol
+
+    for n in range(0,4*pxlPerPkt,4):
+        pxl = [pkt[n],pkt[n+1],pkt[n+2],pkt[n+3]]
+        try:
+            rcvdPixelData[line][col] = np.array(pxl,np.float32)
+        except:
+            break
+
+        if col < 300:
+            col += 1
+        else:
+            col = 0
+            line += 1
+
+
+    #rcvdPixelData[0] = [0,0,0,0]
     pktStats['pktCntRcvd'] += 1
 
 
@@ -194,8 +228,46 @@ def onRcvPktEx(imageProperties,
     # update frequency (by decreasing the value of //GUI_UPDATE_SLEEP//) but you
     # may get a high CPU usage and more lost packets.
     # ->
+    imgHeight = imageProperties["imgHeight"]
+    imgWidth = imageProperties["imgWidth"]
+    pxlPerPkt = senderProperties['pxlPerPkt']
+
+    seqNr = struct.unpack('>I',pkt[0:4])[0]
+    if not (seqNr == pktStats['pktCntRcvd']):
+        pktStats['reorderedPkts'] += 1
+
+    ListOfPkt.append(seqNr)
+    #print(seqNr)
+    startPX = seqNr * pxlPerPkt
+
+    startLine = math.floor(startPX / imgWidth)
+    startCol = startPX - (imgWidth * startLine)
+
+    #print("PTK = %i" % pktNr)
+    #print("PX = %i" % startPX)
+    #print("L  = %i" % startLine)
+    #print("C  = %i" % startCol) 
+
+    line = startLine
+    col = startCol
+
+    for n in range(4,4*pxlPerPkt+4,4): 
+        pxl = [pkt[n],pkt[n+1],pkt[n+2],pkt[n+3]]
+        #print(pxl)
+        try:
+            rcvdPixelData[line][col] = np.array(pxl,np.float32)
+            #print (rcvdPixelData[line][col])
+        except:
+            break
+
+        if col < 300:
+            col += 1
+        else:
+            col = 0
+            line += 1
 
     pktStats['pktCntRcvd'] += 1
+    #print(pktStats['pktCntRcvd'])
 
 
 def onEndMsg(imageProperties, senderProperties, pktStats):
@@ -217,6 +289,14 @@ def onEndMsg(imageProperties, senderProperties, pktStats):
     # <-
     # Put your code to finalize the packet statistics here.
     # ->
+
+    pktStats['lostPkts'] = senderProperties['reqPktCnt'] - pktStats['pktCntRcvd']
+    seenList = []
+    for nr in ListOfPkt:
+        if not (nr in seenList):
+            seenList.append(nr)
+        else:
+            pktStats['duplPkts'] += 1
     pass
 
 

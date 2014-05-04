@@ -27,8 +27,8 @@ AUFGABE > 1
    
 NOTE: The value has to be the same for the sender and receiver!
 """
-AUFGABE = 1
-#AUFGABE = 3
+#AUFGABE = 1
+AUFGABE = 3
 
 """
 The variable AUFGABE_DELAY sets which time value in milliseconds
@@ -101,6 +101,7 @@ def getReqPktCnt(udpMaxPayloadSize, imageProperties):
     Pix = imageProperties["imgHeight"] * imageProperties["imgWidth"]
     PixPerPkt = getNrOfPxlPerPkt(udpMaxPayloadSize, imageProperties)
     Pkt = math.ceil(Pix / PixPerPkt)
+    print ("Max: %i" % Pkt)
     return Pkt
 
 
@@ -130,30 +131,41 @@ def genPayload(pixelData, pxlPerPkt, reqPktCnt, pktNr):
     imgHeight = pixelData.shape[0]
     imgNrOfClrCmp = pixelData.shape[2]
 
-    s = struct.Struct('%sf' % len(pixelData[:]))
-
     startPX = pktNr * pxlPerPkt
-    endPX = startPX + pxlPerPkt
 
     startLine = math.floor(startPX / imgWidth)
     startCol = startPX - (imgWidth * startLine)
 
-    print("PX = %i" % startPX)
-    print("L  = %i" % startLine)
-    print("C  = %i" % startCol) 
-    #fltLst = pixelData[startLine:endLine][startCol:endCol]
-    #print (fltLst)
-    #print (len(fltLst))
+    #print("PTK = %i" % pktNr)
+    #print("PX = %i" % startPX)
+    #print("L  = %i" % startLine)
+    #print("C  = %i" % startCol) 
+    
+    line = startLine
+    col = startCol
+    lst = []
 
-    #print(type(pixelData[0][0]))
-    #print(pixelData)
-    #mylist = s.pack(*pixelData[:])
-# <-
-#
-# Put your Aufgabe 1 code here
-#
-# ->
-    return bytes("", "UTF-8") # <- dummy return (delete when implementing your solution)
+    for n in range(0,pxlPerPkt):
+
+        for x in range(0,4):
+            try:
+                lst.append(pixelData[line][col][x])
+            except:
+                break
+
+
+        if col < 300:
+            col += 1
+        else:
+            col = 0
+            line += 1
+
+        #print (col)
+        #print (line)
+        #print (pixelData[line][col])
+
+    ret = struct.pack('%df' % len(lst), *lst)
+    return  ret
 
 
 def genPayloadEx(pixelData, pxlPerPkt, reqPktCnt, seqNr):
@@ -189,7 +201,36 @@ def genPayloadEx(pixelData, pxlPerPkt, reqPktCnt, seqNr):
 # Put your Aufgabe 3 code here
 #
 # ->
-    return bytes("", "UTF-8") # <- dummy return (delete when implementing your solution)
+
+    startPX = seqNr * pxlPerPkt
+
+    startLine = math.floor(startPX / imgWidth)
+    startCol = startPX - (imgWidth * startLine)
+
+    #print("PTK = %i" % seqNr)
+    #print("PX = %i" % startPX)
+    #print("L  = %i" % startLine)
+    #print("C  = %i" % startCol) 
+    
+    line = startLine
+    col = startCol
+    lst = []
+
+    for n in range(0,pxlPerPkt):
+        for x in range(0,4):
+            try:
+                lst.append(pixelData[line][col][x])
+                #print(pixelData[line][col])
+            except:
+                break
+        if col < 300:
+            col += 1
+        else:
+            col = 0
+            line += 1
+    
+    ret = struct.pack('>I%if' % len(lst), seqNr, *lst)
+    return ret
 
 
 def sendPkt(sock, dest, payload, sleepTime=0):
@@ -214,11 +255,9 @@ def sendPkt(sock, dest, payload, sleepTime=0):
 
     if sleepTime > 0:
 
-        # <-
-        #
-        # Put your code for Aufgabe 2 here
-        #
-        # ->
+        # Aufgabe 2:
+        sleep(sleepTime*(10**-3))
+
         pass
 
 
