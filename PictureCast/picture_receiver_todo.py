@@ -165,22 +165,28 @@ def onRcvPkt(imageProperties,
 
     line = startLine
     col = startCol
+    #print(pkt[0:4])
+    print(len(pkt))
 
-    for n in range(0,4*pxlPerPkt,4):
-        pxl = [pkt[n],pkt[n+1],pkt[n+2],pkt[n+3]]
-        try:
-            rcvdPixelData[line][col] = np.array(pxl,np.float32)
-        except:
+    for n in range(0,len(pkt),16):
+        #print(n)
+        if line > 299:
             break
 
-        if col < 300:
+        comp1 = struct.unpack('f', pkt[n:n+4])
+        comp2 = struct.unpack('f', pkt[n+4:n+8])
+        comp3 = struct.unpack('f', pkt[n+8:n+12])
+        comp4 = struct.unpack('f', pkt[n+12:n+16])
+        #print(comp1)
+        #print(np.array([comp1[0], comp2[0], comp3[0], comp4[0]], np.float32))
+        rcvdPixelData[line][col] = np.array([comp1[0], comp2[0], comp3[0], comp4[0]], np.float32)
+
+        if col < 299:
             col += 1
         else:
             col = 0
             line += 1
 
-
-    #rcvdPixelData[0] = [0,0,0,0]
     pktStats['pktCntRcvd'] += 1
 
 
@@ -232,7 +238,7 @@ def onRcvPktEx(imageProperties,
     imgWidth = imageProperties["imgWidth"]
     pxlPerPkt = senderProperties['pxlPerPkt']
 
-    seqNr = struct.unpack('>I',pkt[0:4])[0]
+    seqNr = struct.unpack('I',pkt[0:4])[0]
     if not (seqNr == pktStats['pktCntRcvd']):
         pktStats['reorderedPkts'] += 1
 
@@ -251,21 +257,30 @@ def onRcvPktEx(imageProperties,
     line = startLine
     col = startCol
 
-    for n in range(4,4*pxlPerPkt+4,4): 
-        pxl = [pkt[n],pkt[n+1],pkt[n+2],pkt[n+3]]
-        #print(pxl)
-        try:
-            rcvdPixelData[line][col] = np.array(pxl,np.float32)
-            #print (rcvdPixelData[line][col])
-        except:
+    pkt = pkt[4:]
+    #print(pkt[0:4])
+    print(len(pkt))
+    for n in range(0,len(pkt),16):
+        #print(n)
+        if line > 299:
             break
 
-        if col < 300:
+        comp1 = struct.unpack('f', pkt[n:n+4])
+        comp2 = struct.unpack('f', pkt[n+4:n+8])
+        comp3 = struct.unpack('f', pkt[n+8:n+12])
+        comp4 = struct.unpack('f', pkt[n+12:n+16])
+        #print(comp1)
+        #print(np.array([comp1[0], comp2[0], comp3[0], comp4[0]], np.float32))
+
+        rcvdPixelData[line][col] = np.array([comp1[0], comp2[0], comp3[0], comp4[0]], np.float32)
+        
+        if col < 299:
             col += 1
         else:
             col = 0
             line += 1
-
+    #print("N= %d" %n)
+    #print("Byte =", pkt[n])        
     pktStats['pktCntRcvd'] += 1
     #print(pktStats['pktCntRcvd'])
 

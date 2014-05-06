@@ -147,14 +147,15 @@ def genPayload(pixelData, pxlPerPkt, reqPktCnt, pktNr):
 
     for n in range(0,pxlPerPkt):
 
-        for x in range(0,4):
-            try:
-                lst.append(pixelData[line][col][x])
-            except:
-                break
+        if line > 299:
+            break
+        #print(pixelData[line][col])
+        lst.append(pixelData[line][col][0])
+        lst.append(pixelData[line][col][1])
+        lst.append(pixelData[line][col][2])
+        lst.append(pixelData[line][col][3])
 
-
-        if col < 300:
+        if col < 299:
             col += 1
         else:
             col = 0
@@ -163,8 +164,10 @@ def genPayload(pixelData, pxlPerPkt, reqPktCnt, pktNr):
         #print (col)
         #print (line)
         #print (pixelData[line][col])
-
+    
     ret = struct.pack('%df' % len(lst), *lst)
+    print ("Nr. ", pktNr, "=", len(lst), "|ret= ", len(ret))
+    #input()
     return  ret
 
 
@@ -217,19 +220,24 @@ def genPayloadEx(pixelData, pxlPerPkt, reqPktCnt, seqNr):
     lst = []
 
     for n in range(0,pxlPerPkt):
-        for x in range(0,4):
-            try:
-                lst.append(pixelData[line][col][x])
-                #print(pixelData[line][col])
-            except:
-                break
-        if col < 300:
+
+        if line > 299:
+            break
+        #print(pixelData[line][col])
+        lst.append(pixelData[line][col][0])
+        lst.append(pixelData[line][col][1])
+        lst.append(pixelData[line][col][2])
+        lst.append(pixelData[line][col][3])
+
+        if col < 299:
             col += 1
         else:
             col = 0
             line += 1
     
-    ret = struct.pack('>I%if' % len(lst), seqNr, *lst)
+    ret = struct.pack('I%df' % len(lst), seqNr, *lst)
+    print ("Nr. ", seqNr, "=", len(lst), "|ret= ", len(ret))
+    #input()
     return ret
 
 
