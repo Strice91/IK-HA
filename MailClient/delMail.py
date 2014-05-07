@@ -39,8 +39,10 @@ def connect():
 
 def send_user(clientSocket):
     ''' Send USER command and print server response.'''
+    # Build Command
     command = "user %s\r\n" % user
     clientSocket.send(command.encode())
+    # Send Command-String
     ans = clientSocket.recv(1024).decode()
     #print(ans)
     if("ERR" in ans):
@@ -49,7 +51,9 @@ def send_user(clientSocket):
 
 def send_pass(clientSocket):
     ''' Send PASS command and print server response.'''
+    # Build Command
     command = "pass %s\r\n" % password
+    # Send Command-String
     clientSocket.send(command.encode())
     ans = clientSocket.recv(1024).decode()
     #print(ans)
@@ -59,7 +63,9 @@ def send_pass(clientSocket):
 
 def send_list(clientSocket):
     '''Send LIST command and get server response.'''
+    # Build Command
     command = "LIST\r\n"
+    # Send Command-String
     clientSocket.send(command.encode())
     ans = clientSocket.recv(1024)
     return ans.decode().split()
@@ -67,9 +73,12 @@ def send_list(clientSocket):
 
 def delete_all_mails(clientSocket, list):
     '''delete all emails'''
+    
     delMails = 0
     for mailNr in list:
+        # Build Command
         command = "DELE %s\r\n" % mailNr
+        # Send Command-String
         clientSocket.send(command.encode())
         ans = clientSocket.recv(1024)
         if ("OK" in ans.decode()):
@@ -78,7 +87,9 @@ def delete_all_mails(clientSocket, list):
 
 
 def delete_specific_mail(clientSocket, mailNr):
+    # Build Command
     command = "DELE %s\r\n" % mailNr
+    # Send Command-String
     clientSocket.send(command.encode())
     ans = clientSocket.recv(1024)
     if ("OK" in ans.decode()):
@@ -89,6 +100,7 @@ def delete_specific_mail(clientSocket, mailNr):
 
 def close_connection(clientSocket):
     '''Send QUIT command and get server response.'''
+    # Send Command-String
     clientSocket.send("QUIT\r\n".encode())
     ans = clientSocket.recv(1024)
     clientSocket.close()

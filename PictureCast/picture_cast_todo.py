@@ -199,12 +199,6 @@ def genPayloadEx(pixelData, pxlPerPkt, reqPktCnt, seqNr):
     imgHeight = pixelData.shape[0]
     imgNrOfClrCmp = pixelData.shape[2]
 
-# <-
-#
-# Put your Aufgabe 3 code here
-#
-# ->
-
     startPX = seqNr * pxlPerPkt
 
     startLine = math.floor(startPX / imgWidth)

@@ -51,7 +51,9 @@ def connect(host, port):
 
 def send_user(clientSocket, user):
     """ send the user command """
+    # Build Command
     command = "user %s\r\n" % user
+    # Send Command-String
     clientSocket.send(command.encode())
     ans = clientSocket.recv(1024).decode()
     #print(ans)
@@ -62,7 +64,9 @@ def send_user(clientSocket, user):
 
 def send_pass(clientSocket, password):
     """ send the pass command """
+    # Build Command
     command = "pass %s\r\n" % password
+    # Send Command-String
     clientSocket.send(command.encode())
     ans = clientSocket.recv(1024).decode() 
     #print(ans)
@@ -73,7 +77,9 @@ def send_pass(clientSocket, password):
 
 def close_connection(clientSocket):
     """ close the connection """
+    # Build Command
     command = "QUIT\r\n"
+    # Send Command-String
     clientSocket.send(command.encode())
     ans = clientSocket.recv(1024)
     clientSocket.close()
@@ -81,14 +87,18 @@ def close_connection(clientSocket):
 
 def send_rset(clientSocket):
     """ send rset command """
+    # Build Command
     command = "RSET\r\n"
+    # Send Command-String
     clientSocket.sendall(command.encode())
     ans = clientSocket.recv(1024)
 
 
 def send_list(clientSocket):
     """ send list command """
+    # Build Command
     command = "LIST\r\n"
+    # Send Command-String
     clientSocket.send(command.encode())
     ans = clientSocket.recv(1024).decode().split()
     return ans
@@ -158,6 +168,7 @@ def getSpecificMail(argv):
     send_user(clientSocket, user)
     send_pass(clientSocket, password)
 
+    # Get a complete Mail
     mail = retr_mail(clientSocket, emailnum, user)
 
     printStart(user)
@@ -182,7 +193,9 @@ def getAllMails(argv):
     send_user(clientSocket, user)
     send_pass(clientSocket, password)
 
+    # Get Mail List
     mailList = send_list(clientSocket)
+    # Reduce Mails to Mail Numbers
     mailList = mailList[3:len(mailList)-1:2]
     
     printStart(user)
@@ -192,6 +205,7 @@ def getAllMails(argv):
     else:
         a = 0
         for mail in mailList:
+            # Get Mail Headers
             head = retr_header(clientSocket,a,mailList)
             printMailHeader(head["mailnum"],head["mailfrom"],head["subjekt"])
             a += 1
