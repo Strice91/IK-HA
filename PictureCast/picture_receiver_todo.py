@@ -149,40 +149,40 @@ def onRcvPkt(imageProperties,
     # may get a high CPU usage and more lost packets.
     # ->
 
+    # Store Imageparameters
     imgHeight = imageProperties["imgHeight"]
     imgWidth = imageProperties["imgWidth"]
     pxlPerPkt = senderProperties['pxlPerPkt']
+    pixelByte = imageProperties['imgNrOfClrCmp'] * imageProperties['imgColorCompSize']
     pktNr = pktStats['pktCntRcvd']
 
+    # Calulating Start Pixel
     startPX = pktNr * pxlPerPkt
     startLine = math.floor(startPX / imgWidth)
     startCol = startPX - (imgWidth * startLine)
-
-    #print("PTK = %i" % pktNr)
-    #print("PX = %i" % startPX)
-    #print("L  = %i" % startLine)
-    #print("C  = %i" % startCol) 
-
+ 
+    # Make temporary line and col
     line = startLine
     col = startCol
-    #print(pkt[0:4])
-    print(len(pkt))
 
-    for n in range(0,len(pkt),16):
-        #print(n)
-        if line > 299:
+    for n in range(0,len(pkt),pixelByte):
+
+        if line > imgHeight-1:
             break
 
+        # Decode each byte
         comp1 = struct.unpack('f', pkt[n:n+4])
         comp2 = struct.unpack('f', pkt[n+4:n+8])
         comp3 = struct.unpack('f', pkt[n+8:n+12])
         comp4 = struct.unpack('f', pkt[n+12:n+16])
-        #print(comp1)
-        #print(np.array([comp1[0], comp2[0], comp3[0], comp4[0]], np.float32))
+        
+        # Combine the 4 color components
         rcvdPixelData[line][col] = np.array([comp1[0], comp2[0], comp3[0], comp4[0]], np.float32)
 
-        if col < 299:
+        # If col < maximum Column increase col
+        if col < imgWidth-1:
             col += 1
+        # Else go to next line and start in colum 0
         else:
             col = 0
             line += 1
@@ -234,55 +234,60 @@ def onRcvPktEx(imageProperties,
     # update frequency (by decreasing the value of //GUI_UPDATE_SLEEP//) but you
     # may get a high CPU usage and more lost packets.
     # ->
+
+    # Store Imageparameters
     imgHeight = imageProperties["imgHeight"]
     imgWidth = imageProperties["imgWidth"]
     pxlPerPkt = senderProperties['pxlPerPkt']
+    pixelByte = imageProperties['imgNrOfClrCmp'] * imageProperties['imgColorCompSize']
 
+    # Get Sequence Number at the begining
     seqNr = struct.unpack('I',pkt[0:4])[0]
+    # If seqNr is not expected -> Packet is reordered 
     if not (seqNr == pktStats['pktCntRcvd']):
         pktStats['reorderedPkts'] += 1
 
+    # Add recieved Packet to List
     ListOfPkt.append(seqNr)
-    #print(seqNr)
+    
+    # Calulating Start Pixel
     startPX = seqNr * pxlPerPkt
 
+    # Determine StartLine and StartColumn
     startLine = math.floor(startPX / imgWidth)
     startCol = startPX - (imgWidth * startLine)
 
-    #print("PTK = %i" % pktNr)
-    #print("PX = %i" % startPX)
-    #print("L  = %i" % startLine)
-    #print("C  = %i" % startCol) 
-
+    # Make temporary line and col
     line = startLine
     col = startCol
 
+    # Remove Sequence Number from Packet
     pkt = pkt[4:]
-    #print(pkt[0:4])
-    print(len(pkt))
-    for n in range(0,len(pkt),16):
-        #print(n)
-        if line > 299:
+
+    for n in range(0,len(pkt),pixelByte):
+
+        if line > imgHeight-1:
             break
 
+        # Decode each byte
         comp1 = struct.unpack('f', pkt[n:n+4])
         comp2 = struct.unpack('f', pkt[n+4:n+8])
         comp3 = struct.unpack('f', pkt[n+8:n+12])
         comp4 = struct.unpack('f', pkt[n+12:n+16])
-        #print(comp1)
-        #print(np.array([comp1[0], comp2[0], comp3[0], comp4[0]], np.float32))
-
+        
+        # Combine the 4 color components
         rcvdPixelData[line][col] = np.array([comp1[0], comp2[0], comp3[0], comp4[0]], np.float32)
         
-        if col < 299:
+        # If col < maximum Column increase col
+        if col < imgWidth-1:
             col += 1
+
+        # Else go to next line and start in colum 0 
         else:
             col = 0
             line += 1
-    #print("N= %d" %n)
-    #print("Byte =", pkt[n])        
+        
     pktStats['pktCntRcvd'] += 1
-    #print(pktStats['pktCntRcvd'])
 
 
 def onEndMsg(imageProperties, senderProperties, pktStats):
@@ -305,13 +310,20 @@ def onEndMsg(imageProperties, senderProperties, pktStats):
     # Put your code to finalize the packet statistics here.
     # ->
 
+    # Calculate lost Packets    
     pktStats['lostPkts'] = senderProperties['reqPktCnt'] - pktStats['pktCntRcvd']
+    
+    # Empty list of Checked Packets
     seenList = []
+
+    # Go through the list of recieved Packets
     for nr in ListOfPkt:
         if not (nr in seenList):
             seenList.append(nr)
+        # If Packet Nr is already in list -> duplicate
         else:
             pktStats['duplPkts'] += 1
+
     pass
 
 

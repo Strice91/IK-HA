@@ -37,7 +37,6 @@ be given to your sendPkt(..) function as sleepTime parameter.
 """
 AUFGABE2_DELAY=5
 
-
 """
 Explanation of the used data dictonaries:
 
@@ -76,7 +75,10 @@ def getNrOfPxlPerPkt(udpMaxPayloadSize, imageProperties):
     Returns:
             Returns the number of pixels per packet/datagram.
     """
-    pixelBytes = 4 * 4
+
+    # Number of Bytes per Pixel
+    pixelBytes = imageProperties['imgNrOfClrCmp'] * imageProperties['imgColorCompSize']
+    # Number of full Pixels per Packet
     fullPixels = math.floor(udpMaxPayloadSize / pixelBytes)
     return fullPixels
 
@@ -97,11 +99,13 @@ def getReqPktCnt(udpMaxPayloadSize, imageProperties):
     Returns:
             Returns the number of packets/datagrams required to send the whole picture.
     """
-
+    # Calculate total number of Pixels
     Pix = imageProperties["imgHeight"] * imageProperties["imgWidth"]
+    # Get number of Pixels per Packet
     PixPerPkt = getNrOfPxlPerPkt(udpMaxPayloadSize, imageProperties)
+    # Get whole number of Packets
     Pkt = math.ceil(Pix / PixPerPkt)
-    print ("Max: %i" % Pkt)
+    print ("Sending %i packets" % Pkt)
     return Pkt
 
 
@@ -127,47 +131,46 @@ def genPayload(pixelData, pxlPerPkt, reqPktCnt, pktNr):
             A 1-dimensional byte array with the payload data for one packet.
     """
 
+    # Store Imageparameters
     imgWidth = pixelData.shape[1]
     imgHeight = pixelData.shape[0]
     imgNrOfClrCmp = pixelData.shape[2]
 
+    # Calulating Start Pixel
     startPX = pktNr * pxlPerPkt
 
+    # Determine StartLine and StartColumn
     startLine = math.floor(startPX / imgWidth)
     startCol = startPX - (imgWidth * startLine)
-
-    #print("PTK = %i" % pktNr)
-    #print("PX = %i" % startPX)
-    #print("L  = %i" % startLine)
-    #print("C  = %i" % startCol) 
     
+    # Make temporary line and col
     line = startLine
     col = startCol
+
+    # Init List of Pixels
     lst = []
 
     for n in range(0,pxlPerPkt):
 
-        if line > 299:
+        if line > imgHeight-1:
             break
-        #print(pixelData[line][col])
+
+        # Append the 4 Color Components
         lst.append(pixelData[line][col][0])
         lst.append(pixelData[line][col][1])
         lst.append(pixelData[line][col][2])
         lst.append(pixelData[line][col][3])
 
-        if col < 299:
+        # If col < maximum Column increase col
+        if col < imgWidth-1:
             col += 1
+        # Else go to next line and start in colum 0
         else:
             col = 0
             line += 1
-
-        #print (col)
-        #print (line)
-        #print (pixelData[line][col])
     
     ret = struct.pack('%df' % len(lst), *lst)
-    print ("Nr. ", pktNr, "=", len(lst), "|ret= ", len(ret))
-    #input()
+    #print ("Nr. ", pktNr, "=", len(lst), "|ret= ", len(ret))
     return  ret
 
 
@@ -195,43 +198,46 @@ def genPayloadEx(pixelData, pxlPerPkt, reqPktCnt, seqNr):
             one packet.
     """
 
+    # Store Imageparameters
     imgWidth = pixelData.shape[1]
     imgHeight = pixelData.shape[0]
     imgNrOfClrCmp = pixelData.shape[2]
 
+    # Calulating Start Pixel
     startPX = seqNr * pxlPerPkt
 
+    # Determine StartLine and StartColumn
     startLine = math.floor(startPX / imgWidth)
     startCol = startPX - (imgWidth * startLine)
-
-    #print("PTK = %i" % seqNr)
-    #print("PX = %i" % startPX)
-    #print("L  = %i" % startLine)
-    #print("C  = %i" % startCol) 
     
+    # Make temporary line and col
     line = startLine
     col = startCol
+
+    # Init List of Pixels
     lst = []
 
     for n in range(0,pxlPerPkt):
 
-        if line > 299:
+        if line > imgHeight-1:
             break
-        #print(pixelData[line][col])
+
+        # Append the 4 Color Components
         lst.append(pixelData[line][col][0])
         lst.append(pixelData[line][col][1])
         lst.append(pixelData[line][col][2])
         lst.append(pixelData[line][col][3])
 
-        if col < 299:
+        # If col < maximum Column increase col
+        if col < imgWidth-1:
             col += 1
+        # Else go to next line and start in colum 0
         else:
             col = 0
             line += 1
     
     ret = struct.pack('I%df' % len(lst), seqNr, *lst)
-    print ("Nr. ", seqNr, "=", len(lst), "|ret= ", len(ret))
-    #input()
+    #print ("Nr. ", seqNr, "=", len(lst), "|ret= ", len(ret))
     return ret
 
 

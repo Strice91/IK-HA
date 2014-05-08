@@ -109,23 +109,21 @@ def retr_mail(clientSocket, emailnum, user):
     # Request Mail from Server
     clientSocket.send(("RETR %d\r\n" % int(emailnum)).encode())
     ans = clientSocket.recv(1024).decode()
+
     if not ("ERR" in ans):
+        # Get Index of the Header Components
         IND_From = ans.index("From:")
         IND_To = ans.index("To:")
         IND_Subject = ans.index("Subject:")
-        IND_X_EsetID = ans.index("X-EsetId:")
+        IND_Msg = ans.index("\r\n", IND_Subject)
 
+        # Build Header Dict from parsed Answer
         ret = {}
         ret["mailfrom"] = ans[IND_From+6:IND_To-1]
         ret["mailto"] = ans[IND_To+4:IND_Subject-1]
-        ret["subjekt"] = ans[IND_Subject+9:IND_X_EsetID-1]
+        ret["subjekt"] = ans[IND_Subject+9:IND_Msg]
         ret["date"] = ""
-        ret["text"] = ans[IND_X_EsetID+36:len(ans)-3]
-
-        #print(ret["mailfrom"])
-        #print(ret["mailto"])
-        #print(ret["subjekt"])
-        #print(ret["text"])
+        ret["text"] = ans[IND_Msg+2:len(ans)-3]
 
         return ret
 
@@ -138,11 +136,13 @@ def retr_mail(clientSocket, emailnum, user):
 
 def retr_header(clientSocket, a, list):
     """ retrieve header """
+    # Store the requested MailNr
     mailNr = list[a]
     command = "TOP %d\r\n" % int(mailNr)
     clientSocket.send(command.encode())
     ans = clientSocket.recv(1024).decode().split()
-    #print(ans)
+
+    # Parse Header
     ret = {}
     ret["mailnum"] = int(mailNr)
     ret["mailfrom"] = ans[2] + " " + ans[3]
