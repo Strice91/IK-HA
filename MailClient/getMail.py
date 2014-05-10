@@ -1,3 +1,11 @@
+'''
+Erstellt am 30.04.2014
+
+@author: Stefan Röhrl
+@MatrikNr: 03623862
+@lrz: ga68bow
+'''     
+
 import sys
 from socket import *
 

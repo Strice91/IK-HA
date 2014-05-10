@@ -1,3 +1,11 @@
+'''
+Erstellt am 01.05.2014
+
+@author: Stefan Röhrl
+@MatrikNr: 03623862
+@lrz: ga68bow
+'''     
+
 #!/usr/bin/python3.3
 
 # ================
@@ -236,7 +244,7 @@ def genPayloadEx(pixelData, pxlPerPkt, reqPktCnt, seqNr):
             col = 0
             line += 1
     
-    ret = struct.pack('I%df' % len(lst), seqNr, *lst)
+    ret = struct.pack('I%sf' % len(lst), seqNr, *lst)
     #print ("Nr. ", seqNr, "=", len(lst), "|ret= ", len(ret))
     return ret
 

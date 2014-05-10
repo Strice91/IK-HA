@@ -1,3 +1,11 @@
+'''
+Erstellt am 29.04.2014
+
+@author: Stefan Röhrl
+@MatrikNr: 03623862
+@lrz: ga68bow
+'''     
+
 #!/usr/bin/python3.3
 import sys
 

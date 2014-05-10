@@ -1,7 +1,9 @@
 '''
-Erstellt am ...
+Erstellt am 23.04.2014
 
-@author: GRUPPE
+@author: Stefan Röhrl
+@MatrikNr: 03623862
+@lrz: ga68bow
 '''     
 
 import socket

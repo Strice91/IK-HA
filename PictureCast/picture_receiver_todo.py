@@ -1,3 +1,11 @@
+'''
+Erstellt am 02.05.2014
+
+@author: Stefan Röhrl
+@MatrikNr: 03623862
+@lrz: ga68bow
+'''     
+
 #!/usr/bin/python3.3
 #
 # Vorlesung Interkommunikation
@@ -246,6 +254,7 @@ def onRcvPktEx(imageProperties,
     # If seqNr is not expected -> Packet is reordered 
     if not (seqNr == pktStats['pktCntRcvd']):
         pktStats['reorderedPkts'] += 1
+    #print(seqNr)
 
     # Add recieved Packet to List
     ListOfPkt.append(seqNr)
