@@ -195,7 +195,6 @@ def main():
     # Check if Socket was created and connected
     if s is None:
         print ('could not open socket')
-        sys.exit(1)
 
     # Accept new Connections
     conn, addr = s.accept()
